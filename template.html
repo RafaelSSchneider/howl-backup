@@ -15,14 +15,14 @@
   th { background: #f4f4f4; position: sticky; top: 0 }
   a { color: #0645ad }
   tr.linha { cursor: pointer } tr.linha:hover { background: #f9f9f9 }
-  tr.desc td { white-space: pre-wrap; background: #fafafa; padding: 12px }
+  tr.desc td { white-space: pre-wrap; line-height: 1.5; background: #fafafa; padding: 12px }
 </style>
 </head>
 <body>
 <h1>Demandas em aberto <small id="n"></small></h1>
 <p>Atualizado em __GERADO__</p>
 <input id="q" type="search" placeholder="Pesquisar código, título, dev, QA, analista, status…" autofocus>
-<select id="st"><option value="">Todos os status</option></select>
+<span id="filtros"></span>
 <div class="wrap">
 <table>
   <thead><tr><th>Código</th><th>Título</th><th>Projeto</th><th>Status</th><th>Dev</th><th>QA</th><th>Analista</th><th>Figma</th></tr></thead>
@@ -31,19 +31,26 @@
 </div>
 <script>
 let dados = __DADOS__
-const t = document.getElementById('t'), n = document.getElementById('n'), q = document.getElementById('q'), st = document.getElementById('st')
+const t = document.getElementById('t'), n = document.getElementById('n'), q = document.getElementById('q')
+const FILTROS = [['projeto', 'Projeto'], ['status', 'Status'], ['dev', 'Dev'], ['qa', 'QA'], ['analista', 'Analista']]
+const sel = {}
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const link = (u) => (/^https?:\/\//.test(u || '') ? `<a href="${esc(u)}" target="_blank" rel="noopener">Figma</a>` : '')
 
 function render() {
   const f = q.value.toLowerCase()
-  const lista = dados.filter((d) => (!st.value || d.status === st.value) && Object.values(d).join(' ').toLowerCase().includes(f))
+  const lista = dados.filter((d) => FILTROS.every(([k]) => !sel[k].value || d[k] === sel[k].value) && Object.values(d).join(' ').toLowerCase().includes(f))
   n.textContent = `(${lista.length})`
   t.innerHTML = lista.map((d) => `<tr class="linha"><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.projeto)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr><tr class="desc" hidden><td colspan="8">${esc(d.descricao) || '<i>Sem descrição</i>'}</td></tr>`).join('')
 }
-;[...new Set(dados.map((d) => d.status))].sort().forEach((v) => st.add(new Option(v, v)))
+FILTROS.forEach(([k, rotulo]) => {
+  const s = (sel[k] = document.createElement('select'))
+  s.add(new Option(rotulo + ': todos', ''))
+  ;[...new Set(dados.map((d) => d[k]).filter(Boolean))].sort().forEach((v) => s.add(new Option(v, v)))
+  s.addEventListener('change', render)
+  document.getElementById('filtros').append(s)
+})
 q.addEventListener('input', render)
-st.addEventListener('change', render)
 t.addEventListener('click', (e) => {
   const tr = e.target.closest('tr.linha')
   if (tr && !e.target.closest('a')) tr.nextElementSibling.hidden = !tr.nextElementSibling.hidden

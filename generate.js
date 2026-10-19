@@ -14,9 +14,18 @@ const SQL = `
   WHERE d.deleted_at IS NULL AND d.arquivado_em IS NULL AND s.eh_terminal = 0
   ORDER BY d.posicao_prioridade, d.id DESC`
 
+// Descrição pode vir como HTML; vira texto puro preservando as quebras de linha.
+const paraTexto = (s) => (s ?? '')
+  .replace(/<br\s*\/?>|<\/(p|div|li|h[1-6])>/gi, '\n')
+  .replace(/<li[^>]*>/gi, '- ')
+  .replace(/<[^>]+>/g, '')
+  .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+  .replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+
 const db = await mysql.createConnection(process.env.DATABASE_URL)
 const [rows] = await db.query(SQL)
 await db.end()
+rows.forEach((r) => { r.descricao = paraTexto(r.descricao) })
 
 const dados = JSON.stringify(rows).replace(/</g, '\\u003c')
 const geradoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
