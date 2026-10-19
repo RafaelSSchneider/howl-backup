@@ -7,6 +7,7 @@
 <style>
   body { font: 14px system-ui, sans-serif; margin: 0; padding: 16px; background: #fff; color: #111 }
   h1 { font-size: 18px; margin: 0 0 12px }
+  select { padding: 8px; font-size: 14px; margin-left: 8px }
   input { width: 100%; max-width: 420px; padding: 8px; font-size: 14px; margin-bottom: 12px }
   .wrap { overflow-x: auto }
   table { border-collapse: collapse; width: 100%; min-width: 700px }
@@ -21,6 +22,7 @@
 <h1>Demandas em aberto <small id="n"></small></h1>
 <p>Atualizado em __GERADO__</p>
 <input id="q" type="search" placeholder="Pesquisar código, título, dev, QA, analista, status…" autofocus>
+<select id="st"><option value="">Todos os status</option></select>
 <div class="wrap">
 <table>
   <thead><tr><th>Código</th><th>Título</th><th>Status</th><th>Dev</th><th>QA</th><th>Analista</th><th>Figma</th></tr></thead>
@@ -29,17 +31,19 @@
 </div>
 <script>
 let dados = __DADOS__
-const t = document.getElementById('t'), n = document.getElementById('n'), q = document.getElementById('q')
+const t = document.getElementById('t'), n = document.getElementById('n'), q = document.getElementById('q'), st = document.getElementById('st')
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const link = (u) => (/^https?:\/\//.test(u || '') ? `<a href="${esc(u)}" target="_blank" rel="noopener">Figma</a>` : '')
 
 function render() {
   const f = q.value.toLowerCase()
-  const lista = dados.filter((d) => Object.values(d).join(' ').toLowerCase().includes(f))
+  const lista = dados.filter((d) => (!st.value || d.status === st.value) && Object.values(d).join(' ').toLowerCase().includes(f))
   n.textContent = `(${lista.length})`
   t.innerHTML = lista.map((d) => `<tr class="linha"><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr><tr class="desc" hidden><td colspan="7">${esc(d.descricao) || '<i>Sem descrição</i>'}</td></tr>`).join('')
 }
+;[...new Set(dados.map((d) => d.status))].sort().forEach((v) => st.add(new Option(v, v)))
 q.addEventListener('input', render)
+st.addEventListener('change', render)
 t.addEventListener('click', (e) => {
   const tr = e.target.closest('tr.linha')
   if (tr && !e.target.closest('a')) tr.nextElementSibling.hidden = !tr.nextElementSibling.hidden
