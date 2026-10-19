@@ -25,7 +25,7 @@
 <select id="st"><option value="">Todos os status</option></select>
 <div class="wrap">
 <table>
-  <thead><tr><th>Código</th><th>Título</th><th>Status</th><th>Dev</th><th>QA</th><th>Analista</th><th>Figma</th></tr></thead>
+  <thead><tr><th>Código</th><th>Título</th><th>Projeto</th><th>Status</th><th>Dev</th><th>QA</th><th>Analista</th><th>Figma</th></tr></thead>
   <tbody id="t"></tbody>
 </table>
 </div>
@@ -39,7 +39,7 @@ function render() {
   const f = q.value.toLowerCase()
   const lista = dados.filter((d) => (!st.value || d.status === st.value) && Object.values(d).join(' ').toLowerCase().includes(f))
   n.textContent = `(${lista.length})`
-  t.innerHTML = lista.map((d) => `<tr class="linha"><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr><tr class="desc" hidden><td colspan="7">${esc(d.descricao) || '<i>Sem descrição</i>'}</td></tr>`).join('')
+  t.innerHTML = lista.map((d) => `<tr class="linha"><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.projeto)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr><tr class="desc" hidden><td colspan="8">${esc(d.descricao) || '<i>Sem descrição</i>'}</td></tr>`).join('')
 }
 ;[...new Set(dados.map((d) => d.status))].sort().forEach((v) => st.add(new Option(v, v)))
 q.addEventListener('input', render)
