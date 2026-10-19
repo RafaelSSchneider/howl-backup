@@ -1,6 +1,6 @@
 // Roda no build: lê o banco (somente SELECT) e grava public/index.html estático.
 import mysql from 'mysql2/promise'
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const SQL = `
   SELECT d.codigo, d.titulo, d.figma_url AS figma, COALESCE(NULLIF(d.descricao_texto_plain, ""), d.descricao) AS descricao, s.nome AS status, p.nome AS projeto,
@@ -21,5 +21,6 @@ await db.end()
 const dados = JSON.stringify(rows).replace(/</g, '\\u003c')
 const geradoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 const html = (await readFile('template.html', 'utf8')).replace('__DADOS__', () => dados).replace('__GERADO__', geradoEm)
+await mkdir('public', { recursive: true })
 await writeFile('public/index.html', html)
 console.log(`${rows.length} demandas -> public/index.html`)
