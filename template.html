@@ -10,6 +10,8 @@
   p { margin: 0 0 12px; color: #555 }
   .barra { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 12px }
   #filtros { display: contents }
+  .f { display: flex; align-items: center; gap: 4px; font-size: 13px }
+  .f select, .f summary { width: 120px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden }
   input, select, details.multi summary { padding: 6px 8px; font-size: 14px; margin: 0; box-sizing: border-box; height: 34px }
   input { width: 100%; max-width: 280px }
   #board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; padding-bottom: 16px }
@@ -63,27 +65,33 @@ function render() {
   }).join('')
 }
 
+const campo = (rotulo, el) => {
+  const d = document.createElement('div')
+  d.className = 'f'
+  d.append(rotulo, el)
+  return d
+}
 FILTROS.forEach(([k, rotulo, multi]) => {
   const valores = [...new Set(dados.map((d) => d[k]).filter(Boolean))].sort()
   const alvo = document.getElementById('filtros')
   if (!multi) {
     const s = document.createElement('select')
-    s.add(new Option(rotulo + ': todos', ''))
+    s.add(new Option('todos', ''))
     valores.forEach((v) => s.add(new Option(v, v)))
     s.addEventListener('change', render)
     sel[k] = () => (s.value ? [s.value] : [])
-    return alvo.append(s)
+    return alvo.append(campo(rotulo, s))
   }
   const det = document.createElement('details')
   det.className = 'multi'
-  det.innerHTML = `<summary>${rotulo}: todos</summary><div class="opts">${valores.map((v) => `<label><input type="checkbox" value="${esc(v)}"> ${esc(v)}</label>`).join('')}</div>`
+  det.innerHTML = `<summary>todos</summary><div class="opts">${valores.map((v) => `<label><input type="checkbox" value="${esc(v)}"> ${esc(v)}</label>`).join('')}</div>`
   sel[k] = () => [...det.querySelectorAll('input:checked')].map((i) => i.value)
   det.addEventListener('change', () => {
     const v = sel[k]()
-    det.firstChild.textContent = `${rotulo}: ${v.length ? v.length + ' selecionado(s)' : 'todos'}`
+    det.firstChild.textContent = v.length ? `${v.length} selecionado(s)` : 'todos'
     render()
   })
-  alvo.append(det)
+  alvo.append(campo(rotulo, det))
 })
 document.addEventListener('click', (e) => document.querySelectorAll('details.multi[open]').forEach((d) => d.contains(e.target) || d.removeAttribute('open')))
 q.addEventListener('input', render)
