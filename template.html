@@ -21,6 +21,16 @@
   details.multi input { margin: 0; width: 15px; height: 15px; flex: none }
   details.multi label { display: flex; gap: 6px; align-items: center; padding: 4px; white-space: nowrap; cursor: pointer; border-radius: 4px }
   details.multi label:hover { background: #f2f2f2 }
+  .abas { display: flex; gap: 4px; border-bottom: 1px solid #ddd; margin-bottom: 8px }
+  .abas a { padding: 8px 14px; color: #555; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600 }
+  .abas a.ativa { color: #111; border-bottom-color: #111 }
+  #semana { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 16px }
+  .dia h2 span { color: #777; font-weight: 400 }
+  .dia .sub { font-size: 12px; color: #555; margin: 8px 0 6px; font-weight: 600 }
+  .pessoa { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 6px 8px; margin-bottom: 6px }
+  .pessoa small { display: block; color: #666; font-size: 12px }
+  .aviso { background: #fff7d6; border: 1px solid #f0d77a; border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; font-size: 13px }
+  .vazio { color: #888; font-style: italic }
   #board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; padding-bottom: 16px }
   .col { flex: 0 0 280px; background: #f4f4f4; border-radius: 6px; padding: 8px }
   .col h2 { font-size: 13px; margin: 0 0 8px; text-transform: uppercase }
@@ -41,13 +51,20 @@
 </style>
 </head>
 <body>
-<h1>Demandas em aberto <small id="n"></small></h1>
+<nav class="abas"><a href="#demandas">Demandas</a><a href="#escala">Escala da semana</a></nav>
 <p>Atualizado em __GERADO__</p>
+<section id="aba-demandas">
+<h1>Demandas em aberto <small id="n"></small></h1>
 <div class="barra">
 <input id="q" type="search" placeholder="Pesquisar código, título, dev, QA, analista, status…" autofocus>
 <span id="filtros"></span>
 </div>
 <div id="board"></div>
+</section>
+<section id="aba-escala" hidden>
+<h1>Escala da semana <small id="periodo"></small></h1>
+<div id="semana"></div>
+</section>
 <dialog id="m"></dialog>
 <script>
 let dados = __DADOS__
@@ -119,6 +136,35 @@ board.addEventListener('click', (e) => {
 })
 m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('.x')) m.close() })
 render()
+
+// ── Aba Escala ────────────────────────────────────────────────────────────
+const escala = __ESCALA__
+const NOMES_DIA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']
+const dm = (ymd) => ymd.slice(8, 10) + '/' + ymd.slice(5, 7)
+document.getElementById('periodo').textContent = `(${dm(escala.dias[0])} a ${dm(escala.dias[4])})`
+document.getElementById('semana').innerHTML = escala.dias.map((dia, i) => {
+  const avisos = [
+    ...escala.reunioes.filter((r) => r.data === dia).map((r) => `📅 ${esc(r.titulo)}`),
+    ...escala.trocas.filter((t) => t.feriado === dia).map((t) => `Feriado trocado: ${esc(t.nome)} (compensa ${dm(t.compensacao)})`),
+    ...escala.trocas.filter((t) => t.compensacao === dia).map((t) => `Compensação do feriado ${esc(t.nome)}`),
+    ...escala.especiais.filter((e) => e.data === dia).map((e) => `${e.tipo === 'trancado' ? 'Dia trancado' : esc(e.tipo)}${e.nome ? ' · ' + esc(e.nome) : ''}${e.motivo ? ': ' + esc(e.motivo) : ''}`),
+  ]
+  const ho = escala.homeOffice.filter((h) => h.data === dia)
+  return `<div class="col dia"><h2>${NOMES_DIA[i]} <span>${dm(dia)}</span></h2>
+    ${avisos.map((a) => `<div class="aviso">${a}</div>`).join('')}
+    <div class="sub">Home office (${ho.length})</div>
+    ${ho.map((h) => `<div class="pessoa">${esc(h.nome)}<small>${esc(h.setor) || ''}</small></div>`).join('') || '<div class="vazio">Ninguém</div>'}
+  </div>`
+}).join('')
+
+const abas = () => {
+  const escalaAtiva = location.hash === '#escala'
+  document.getElementById('aba-demandas').hidden = escalaAtiva
+  document.getElementById('aba-escala').hidden = !escalaAtiva
+  document.querySelectorAll('.abas a').forEach((a) => a.classList.toggle('ativa', a.hash === (escalaAtiva ? '#escala' : '#demandas')))
+}
+addEventListener('hashchange', abas)
+abas()
 </script>
 </body>
 </html>
