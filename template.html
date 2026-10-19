@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Howl Simples</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 0; padding: 16px; background: #fff; color: #111 }
+  h1 { font-size: 18px; margin: 0 0 12px }
+  input { width: 100%; max-width: 420px; padding: 8px; font-size: 14px; margin-bottom: 12px }
+  .wrap { overflow-x: auto }
+  table { border-collapse: collapse; width: 100%; min-width: 700px }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd }
+  th { background: #f4f4f4; position: sticky; top: 0 }
+  a { color: #0645ad }
+</style>
+</head>
+<body>
+<h1>Demandas em aberto <small id="n"></small></h1>
+<p>Atualizado em __GERADO__</p>
+<input id="q" type="search" placeholder="Pesquisar código, título, dev, QA, analista, status…" autofocus>
+<div class="wrap">
+<table>
+  <thead><tr><th>Código</th><th>Título</th><th>Status</th><th>Dev</th><th>QA</th><th>Analista</th><th>Figma</th></tr></thead>
+  <tbody id="t"></tbody>
+</table>
+</div>
+<script>
+let dados = __DADOS__
+const t = document.getElementById('t'), n = document.getElementById('n'), q = document.getElementById('q')
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const link = (u) => (/^https?:\/\//.test(u || '') ? `<a href="${esc(u)}" target="_blank" rel="noopener">Figma</a>` : '')
+
+function render() {
+  const f = q.value.toLowerCase()
+  const lista = dados.filter((d) => Object.values(d).join(' ').toLowerCase().includes(f))
+  n.textContent = `(${lista.length})`
+  t.innerHTML = lista.map((d) => `<tr><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr>`).join('')
+}
+q.addEventListener('input', render)
+render()
+</script>
+</body>
+</html>

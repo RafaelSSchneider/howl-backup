@@ -1,0 +1,10 @@
+{
+  "name": "howl-backup",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node generate.js",
+    "dev": "node --env-file=.env generate.js && python3 -m http.server 3000 -d public"
+  },
+  "dependencies": { "mysql2": "^3.11.0" }
+}
