@@ -48,7 +48,12 @@ const m = document.getElementById('m'), board = document.getElementById('board')
 const FILTROS = [['projeto', 'Projeto', true], ['status', 'Status', true], ['dev', 'Dev', true], ['qa', 'QA', true], ['analista', 'Analista', true]]
 const sel = {}
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-const link = (u) => (/^https?:\/\//.test(u || '') ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">Figma</a>` : '')
+// Aceita URL com ou sem protocolo, com espaços ou dentro de texto.
+const figmaUrl = (u) => {
+  const m = String(u ?? '').match(/(?:https?:\/\/)?(?:[\w-]+\.)?figma\.com\/[^\s"'<>]*/i)
+  return m ? (/^https?:/i.test(m[0]) ? m[0] : 'https://' + m[0]) : ''
+}
+const link = (u) => (figmaUrl(u) ? ` · <a href="${esc(figmaUrl(u))}" target="_blank" rel="noopener">Figma</a>` : '')
 
 // Colunas por nome de status: nomes repetidos (de fluxos diferentes) viram uma só, na menor ordem.
 const ordem = {}
