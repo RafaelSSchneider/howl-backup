@@ -13,6 +13,8 @@
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd }
   th { background: #f4f4f4; position: sticky; top: 0 }
   a { color: #0645ad }
+  tr.linha { cursor: pointer } tr.linha:hover { background: #f9f9f9 }
+  tr.desc td { white-space: pre-wrap; background: #fafafa; padding: 12px }
 </style>
 </head>
 <body>
@@ -35,9 +37,13 @@ function render() {
   const f = q.value.toLowerCase()
   const lista = dados.filter((d) => Object.values(d).join(' ').toLowerCase().includes(f))
   n.textContent = `(${lista.length})`
-  t.innerHTML = lista.map((d) => `<tr><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr>`).join('')
+  t.innerHTML = lista.map((d) => `<tr class="linha"><td>${esc(d.codigo)}</td><td>${esc(d.titulo)}</td><td>${esc(d.status)}</td><td>${esc(d.dev)}</td><td>${esc(d.qa)}</td><td>${esc(d.analista)}</td><td>${link(d.figma)}</td></tr><tr class="desc" hidden><td colspan="7">${esc(d.descricao) || '<i>Sem descrição</i>'}</td></tr>`).join('')
 }
 q.addEventListener('input', render)
+t.addEventListener('click', (e) => {
+  const tr = e.target.closest('tr.linha')
+  if (tr && !e.target.closest('a')) tr.nextElementSibling.hidden = !tr.nextElementSibling.hidden
+})
 render()
 </script>
 </body>
