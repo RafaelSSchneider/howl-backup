@@ -18,6 +18,10 @@
   .cod { font-weight: 600; font-size: 12px; color: #555 }
   .meta { font-size: 12px; color: #555; margin-top: 4px }
   .desc { white-space: pre-wrap; line-height: 1.5; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; cursor: auto }
+  details.multi { display: inline-block; position: relative; margin: 0 8px 12px 0; vertical-align: top }
+  details.multi summary { padding: 8px; border: 1px solid #767676; border-radius: 3px; cursor: pointer; background: #fff; list-style: none }
+  details.multi .opts { position: absolute; z-index: 10; background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 6px; max-height: 260px; overflow: auto; min-width: 200px; box-shadow: 0 2px 8px #0002 }
+  details.multi label { display: block; padding: 3px 4px; white-space: nowrap; cursor: pointer }
   a { color: #0645ad }
 </style>
 </head>
@@ -30,7 +34,7 @@
 <script>
 let dados = __DADOS__
 const board = document.getElementById('board'), n = document.getElementById('n'), q = document.getElementById('q')
-const FILTROS = [['projeto', 'Projeto'], ['status', 'Status'], ['dev', 'Dev'], ['qa', 'QA'], ['analista', 'Analista']]
+const FILTROS = [['projeto', 'Projeto', true], ['status', 'Status', true], ['dev', 'Dev'], ['qa', 'QA'], ['analista', 'Analista']]
 const sel = {}
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 const link = (u) => (/^https?:\/\//.test(u || '') ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">Figma</a>` : '')
@@ -47,7 +51,7 @@ const card = (d) => `<div class="card"><div class="cod">${esc(d.codigo)}</div>${
 
 function render() {
   const f = q.value.toLowerCase()
-  const lista = dados.filter((d) => FILTROS.every(([k]) => !sel[k].value || d[k] === sel[k].value) && Object.values(d).join(' ').toLowerCase().includes(f))
+  const lista = dados.filter((d) => FILTROS.every(([k]) => { const v = sel[k](); return !v.length || v.includes(d[k]) }) && Object.values(d).join(' ').toLowerCase().includes(f))
   n.textContent = `(${lista.length})`
   board.innerHTML = colunas.map((c) => {
     const cards = lista.filter((d) => d.status === c)
@@ -55,13 +59,29 @@ function render() {
   }).join('')
 }
 
-FILTROS.forEach(([k, rotulo]) => {
-  const s = (sel[k] = document.createElement('select'))
-  s.add(new Option(rotulo + ': todos', ''))
-  ;[...new Set(dados.map((d) => d[k]).filter(Boolean))].sort().forEach((v) => s.add(new Option(v, v)))
-  s.addEventListener('change', render)
-  document.getElementById('filtros').append(s)
+FILTROS.forEach(([k, rotulo, multi]) => {
+  const valores = [...new Set(dados.map((d) => d[k]).filter(Boolean))].sort()
+  const alvo = document.getElementById('filtros')
+  if (!multi) {
+    const s = document.createElement('select')
+    s.add(new Option(rotulo + ': todos', ''))
+    valores.forEach((v) => s.add(new Option(v, v)))
+    s.addEventListener('change', render)
+    sel[k] = () => (s.value ? [s.value] : [])
+    return alvo.append(s)
+  }
+  const det = document.createElement('details')
+  det.className = 'multi'
+  det.innerHTML = `<summary>${rotulo}: todos</summary><div class="opts">${valores.map((v) => `<label><input type="checkbox" value="${esc(v)}"> ${esc(v)}</label>`).join('')}</div>`
+  sel[k] = () => [...det.querySelectorAll('input:checked')].map((i) => i.value)
+  det.addEventListener('change', () => {
+    const v = sel[k]()
+    det.firstChild.textContent = `${rotulo}: ${v.length ? v.length + ' selecionado(s)' : 'todos'}`
+    render()
+  })
+  alvo.append(det)
 })
+document.addEventListener('click', (e) => document.querySelectorAll('details.multi[open]').forEach((d) => d.contains(e.target) || d.removeAttribute('open')))
 q.addEventListener('input', render)
 board.addEventListener('click', (e) => {
   const c = e.target.closest('.card')
