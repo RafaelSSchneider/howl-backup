@@ -15,10 +15,13 @@ const SQL = `
   LEFT JOIN usuarios qa  ON qa.id  = d.qa_usuario_id
   LEFT JOIN usuarios an  ON an.id  = d.analista_usuario_id
   WHERE d.deleted_at IS NULL AND d.arquivado_em IS NULL AND s.eh_terminal = 0
+    AND q.nome NOT IN (?) -- quadros que não podem aparecer nesta página
   ORDER BY d.posicao_prioridade, d.id DESC`
 
 const db = await mysql.createConnection(process.env.DATABASE_URL)
-const [rows] = await db.query(SQL)
+// Excluído no SQL (e não só escondido na tela) para os dados nem irem para o HTML público.
+const QUADROS_EXCLUIDOS = ['Gestão']
+const [rows] = await db.query(SQL, [QUADROS_EXCLUIDOS])
 const dias = diasDaSemana()
 const intervalo = [dias[0], dias[4]]
 const [[homeOffice], [reunioes], [especiais], [trocas]] = await Promise.all([
