@@ -5,11 +5,12 @@ import { descricao } from './texto.js'
 import { diasDaSemana } from './semana.js'
 
 const SQL = `
-  SELECT d.codigo, d.titulo, d.figma_url AS figma, d.descricao, d.descricao_texto_plain AS plain, d.descricao_rich_json AS rich, s.nome AS status, s.ordem_exibicao AS ordem, p.nome AS projeto,
+  SELECT d.codigo, d.titulo, d.figma_url AS figma, d.descricao, d.descricao_texto_plain AS plain, d.descricao_rich_json AS rich, s.nome AS status, s.ordem_exibicao AS ordem, p.nome AS projeto, q.id AS quadroId, q.nome AS quadro,
          dev.nome AS dev, qa.nome AS qa, an.nome AS analista
   FROM demandas d
   JOIN status_fluxo s ON s.id = d.status_fluxo_id
   JOIN projetos p ON p.id = d.projeto_id
+  JOIN quadros q ON q.id = d.quadro_id
   LEFT JOIN usuarios dev ON dev.id = d.responsavel_usuario_id
   LEFT JOIN usuarios qa  ON qa.id  = d.qa_usuario_id
   LEFT JOIN usuarios an  ON an.id  = d.analista_usuario_id
