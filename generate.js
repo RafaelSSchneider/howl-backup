@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
 const SQL = `
-  SELECT d.codigo, d.titulo, d.figma_url AS figma, COALESCE(NULLIF(d.descricao_texto_plain, ""), d.descricao) AS descricao, s.nome AS status, p.nome AS projeto,
+  SELECT d.codigo, d.titulo, d.figma_url AS figma, COALESCE(NULLIF(d.descricao_texto_plain, ""), d.descricao) AS descricao, s.nome AS status, s.ordem_exibicao AS ordem, p.nome AS projeto,
          dev.nome AS dev, qa.nome AS qa, an.nome AS analista
   FROM demandas d
   JOIN status_fluxo s ON s.id = d.status_fluxo_id
